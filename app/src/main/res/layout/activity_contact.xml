@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- FIX #1 & #2: Restructured layout so contactCount is inside a
+     proper container above the ListView. Previously the ListView had
+     wrap_content height (making it invisible) and contactCount was
+     below it (pushed completely off screen). Now using a vertical
+     LinearLayout with the list taking all remaining space via weight. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Emergency Contacts"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="@color/colorPrimary"
+        android:layout_marginBottom="16dp"/>
+
+    <EditText
+        android:id="@+id/nameInput"
+        android:hint="Name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"/>
+
+    <EditText
+        android:id="@+id/phoneInput"
+        android:hint="Phone Number"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="phone"
+        android:layout_marginBottom="8dp"/>
+
+    <Button
+        android:id="@+id/addContactBtn"
+        android:text="Add Contact"
+        android:backgroundTint="@color/colorPrimary"
+        android:textColor="@color/white"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"/>
+
+    <!-- FIX #2: contactCount moved here, above the list, so it's always visible -->
+    <TextView
+        android:id="@+id/contactCount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="No emergency contacts added yet."
+        android:textSize="13sp"
+        android:textColor="@color/colorTextSecondary"
+        android:layout_marginBottom="8dp"/>
+
+    <!-- FIX #1: ListView now uses layout_weight="1" to fill remaining space
+         instead of wrap_content which made it collapse to zero height -->
+    <ListView
+        android:id="@+id/contactList"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+</LinearLayout>
