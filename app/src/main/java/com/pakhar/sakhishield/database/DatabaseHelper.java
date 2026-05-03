@@ -6,31 +6,24 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import java.util.ArrayList;
-
 public class DatabaseHelper extends SQLiteOpenHelper {
     private static final String DB_NAME = "SafetyDB";
     private static final int DB_VERSION = 5; // bumped from 4
-
     public static final String TABLE_CONTACT = "contacts";
     public static final String TABLE_LOG = "emergency_log";
     public static final String TABLE_USERS = "users";
-
     public DatabaseHelper(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
     }
 
     @Override
     public void onCreate(SQLiteDatabase db) {
-
-        // Contacts table — priority: 1 = primary, 0 = secondary
         String createContacts = "CREATE TABLE contacts (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "name TEXT, " +
                 "phone TEXT UNIQUE, " +
                 "priority INTEGER DEFAULT 0)";
         db.execSQL(createContacts);
-
-        // Emergency log table
         String createLog = "CREATE TABLE emergency_log (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "timestamp TEXT, " +
@@ -38,8 +31,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 "longitude REAL, " +
                 "status TEXT)";
         db.execSQL(createLog);
-
-        // Users table — added home_lat, home_lon, home_address
         String createUsers = "CREATE TABLE users (" +
                 "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "name TEXT, " +
@@ -62,11 +53,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
                 db.execSQL("ALTER TABLE users ADD COLUMN home_address TEXT DEFAULT ''");
             } catch (Exception e) { /* Column may already exist */ }
         }
-        // Only drop+recreate as last resort for major schema breaks
     }
-
-    // ─── CONTACT METHODS ──────────────────────────────────────────
-
     public boolean addContact(String name, String phone, int priority) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -78,12 +65,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
         return result != -1;
     }
-
-    // Old addContact for backward compatibility
     public boolean addContact(String name, String phone) {
         return addContact(name, phone, 0);
     }
-
     public void updateContactPriority(String phone, int priority) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -91,11 +75,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.update(TABLE_CONTACT, values, "phone = ?", new String[]{phone});
         db.close();
     }
-
     public ArrayList<String> getAllContacts() {
         ArrayList<String> contacts = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
-        // Order by priority DESC so primary contact shows first
         Cursor cursor = db.rawQuery(
                 "SELECT name, phone, priority FROM contacts ORDER BY priority DESC", null);
         if (cursor.moveToFirst()) {
@@ -111,7 +93,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
         return contacts;
     }
-
     public ArrayList<String> getAllPhoneNumbers() {
         ArrayList<String> phones = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
@@ -126,7 +107,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
         return phones;
     }
-
     public String getPrimaryContact() {
         SQLiteDatabase db = this.getReadableDatabase();
         String phone = "";
@@ -145,7 +125,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
         return phone;
     }
-
     public ArrayList<String> getSecondaryContacts() {
         ArrayList<String> phones = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
@@ -160,15 +139,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
         return phones;
     }
-
     public void deleteContact(String phone) {
         SQLiteDatabase db = this.getWritableDatabase();
         db.delete(TABLE_CONTACT, "phone = ?", new String[]{phone});
         db.close();
     }
 
-    // ─── EMERGENCY LOG METHODS ─────────────────────────────────────
-
+    // Emergency log methods
     public void logEmergency(double latitude, double longitude, String status) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -179,7 +156,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.insert(TABLE_LOG, null, values);
         db.close();
     }
-
     public ArrayList<String> getEmergencyLogs() {
         ArrayList<String> logs = new ArrayList<>();
         SQLiteDatabase db = this.getReadableDatabase();
@@ -198,15 +174,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
         return logs;
     }
-
     public void clearEmergencyLogs() {
         SQLiteDatabase db = this.getWritableDatabase();
         db.delete(TABLE_LOG, null, null);
         db.close();
     }
 
-    // ─── USER METHODS ──────────────────────────────────────────────
-
+    // user methods
     public boolean registerUser(String name, String phone, String email, String password) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
@@ -219,7 +193,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
         return result != -1;
     }
-
     public boolean checkUser(String phone, String password) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery(
@@ -230,7 +203,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
         return exists;
     }
-
     public String[] getUserDetails(String phone) {
         SQLiteDatabase db = this.getReadableDatabase();
         Cursor cursor = db.rawQuery(
@@ -246,14 +218,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
         return details;
     }
-
-    // Update user profile — password is optional (pass null to keep existing)
     public void updateUser(String phone, String name, String email, String newPassword) {
         SQLiteDatabase db = this.getWritableDatabase();
         ContentValues values = new ContentValues();
         values.put("name", name);
         values.put("email", email);
-
         // Only update password if a new one was provided
         if (newPassword != null && !newPassword.isEmpty()) {
             values.put("password", newPassword);
@@ -262,7 +231,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.update(TABLE_USERS, values, "phone = ?", new String[]{phone});
         db.close();
     }
-
     // Save home location for a user
     public void saveHomeLocation(String phone, double lat, double lon, String address) {
         SQLiteDatabase db = this.getWritableDatabase();
@@ -273,7 +241,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.update(TABLE_USERS, values, "phone = ?", new String[]{phone});
         db.close();
     }
-
     // Get home location for a user
     public double[] getHomeLocation(String phone) {
         SQLiteDatabase db = this.getReadableDatabase();
@@ -289,7 +256,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.close();
         return location;
     }
-
     public String getHomeAddress(String phone) {
         SQLiteDatabase db = this.getReadableDatabase();
         String address = "";

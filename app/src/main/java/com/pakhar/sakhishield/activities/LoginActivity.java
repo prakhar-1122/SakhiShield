@@ -24,14 +24,12 @@ public class LoginActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
         dbHelper = new DatabaseHelper(this);
-        // If already logged in, skip login screen
         SharedPreferences prefs = getSharedPreferences("SakhiShieldPrefs", MODE_PRIVATE);
         if (prefs.getBoolean("isLoggedIn", false)) {
             startActivity(new Intent(this, MainActivity.class));
             finish();
             return;
         }
-
         phoneInput   = findViewById(R.id.loginPhone);
         passwordInput = findViewById(R.id.loginPassword);
         loginBtn     = findViewById(R.id.loginBtn);
@@ -39,12 +37,10 @@ public class LoginActivity extends AppCompatActivity {
         loginBtn.setOnClickListener(v -> {
             String phone    = phoneInput.getText().toString().trim();
             String password = passwordInput.getText().toString().trim();
-
             if (phone.isEmpty() || password.isEmpty()) {
                 Toast.makeText(this, "Enter all fields", Toast.LENGTH_SHORT).show();
                 return;
             }
-
             if (dbHelper.checkUser(phone, password)) {
                 prefs.edit()
                         .putBoolean("isLoggedIn", true)
@@ -56,7 +52,6 @@ public class LoginActivity extends AppCompatActivity {
                 Toast.makeText(this, "Invalid phone or password", Toast.LENGTH_SHORT).show();
             }
         });
-
         registerLink.setOnClickListener(v ->
                 startActivity(new Intent(this, RegisterActivity.class)));
     }

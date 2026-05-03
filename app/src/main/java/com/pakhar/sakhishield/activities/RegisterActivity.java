@@ -30,7 +30,6 @@ public class RegisterActivity extends AppCompatActivity {
         confirmPasswordInput = findViewById(R.id.registerConfirmPassword);
         registerBtn          = findViewById(R.id.registerBtn);
         loginLink            = findViewById(R.id.loginLink);
-
         registerBtn.setOnClickListener(v -> {
             String name     = nameInput.getText().toString().trim();
             String phone    = phoneInput.getText().toString().trim();

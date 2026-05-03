@@ -23,12 +23,10 @@ import com.pakhar.sakhishield.services.EmergencyService;
 import com.pakhar.sakhishield.services.RecordingManager;
 
 public class MainActivity extends AppCompatActivity {
-
-    private static final int REQUEST_CORE_PERMISSIONS = 1;
+    private static final int REQUEST_CORE_PERMISSIONS = 1; //permis. callback
     private static final int REQUEST_NOTIFICATION = 2;
     private static final int REQUEST_BACKGROUND_LOCATION = 3;
     private static final int REQUEST_RECORDING_PERMISSIONS = 4;
-
     FusedLocationProviderClient fusedLocationClient;
     EmergencyManager emergencyManager;
     DatabaseHelper dbHelper;
@@ -43,29 +41,24 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         dbHelper = new DatabaseHelper(this);
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         emergencyManager = new EmergencyManager(dbHelper, this);
         recordingManager = new RecordingManager(this);
-
+        //connect ui
         panicButton = findViewById(R.id.panicButton);
         statusText = findViewById(R.id.statusText);
         stopRecordingBtn = findViewById(R.id.stopRecordingBtn);
-
         Button settingsBtn = findViewById(R.id.settingsBtn);
         Button logoutBtn = findViewById(R.id.logoutBtn);
-
         LinearLayout contactRow = findViewById(R.id.contactRow);
         LinearLayout logRow = findViewById(R.id.logRow);
         LinearLayout homeRow = findViewById(R.id.homeRow);
         LinearLayout savedRecordingsRow = findViewById(R.id.savedRecordingsRow);
-
         TextView profileName = findViewById(R.id.profileName);
         TextView profileEmail = findViewById(R.id.profileEmail);
         TextView profilePhone = findViewById(R.id.profilePhone);
         TextView profileInitial = findViewById(R.id.profileInitial);
-
         SharedPreferences prefs = getSharedPreferences("SakhiShieldPrefs", MODE_PRIVATE);
         String userPhone = prefs.getString("userPhone", "");
         if (!userPhone.isEmpty()) {
@@ -81,8 +74,8 @@ public class MainActivity extends AppCompatActivity {
             }
         }
 
-        stopRecordingBtn.setVisibility(android.view.View.GONE);
-        stopRecordingBtn.setOnClickListener(v -> {
+        stopRecordingBtn.setVisibility(android.view.View.GONE); //initially hidden
+        stopRecordingBtn.setOnClickListener(v -> { //lambda click handler
             recordingManager.stopAllRecordings();
             stopRecordingBtn.setVisibility(android.view.View.GONE);
             statusText.setText("Recording stopped.");
@@ -96,41 +89,29 @@ public class MainActivity extends AppCompatActivity {
 
         settingsBtn.setOnClickListener(v ->
                 startActivity(new Intent(this, SettingsActivity.class)));
-
         logoutBtn.setOnClickListener(v -> {
             prefs.edit().clear().apply();
             startActivity(new Intent(this, LoginActivity.class));
             finish();
         });
-
         contactRow.setOnClickListener(v ->
                 startActivity(new Intent(this, ContactActivity.class)));
-
         logRow.setOnClickListener(v ->
                 startActivity(new Intent(this, EmergencyLogActivity.class)));
-
         homeRow.setOnClickListener(v -> saveHomeLocation());
-
-        // FIX #1: Was launching non-existent RecordingActivity — corrected to SavedRecordingsActivity
         savedRecordingsRow.setOnClickListener(v ->
                 startActivity(new Intent(this, SavedRecordingsActivity.class)));
-
         requestCorePermissions();
     }
 
-    // ─── PERMISSION FLOW ──────────────────────────────────────────
-
+    // Permission order
     private void requestCorePermissions() {
-        boolean locationGranted = ActivityCompat.checkSelfPermission(this,
-                android.Manifest.permission.ACCESS_FINE_LOCATION)
+        boolean locationGranted = ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED;
-        boolean smsGranted = ActivityCompat.checkSelfPermission(this,
-                android.Manifest.permission.SEND_SMS)
+        boolean smsGranted = ActivityCompat.checkSelfPermission(this, android.Manifest.permission.SEND_SMS)
                 == PackageManager.PERMISSION_GRANTED;
-        boolean callGranted = ActivityCompat.checkSelfPermission(this,
-                android.Manifest.permission.CALL_PHONE)
+        boolean callGranted = ActivityCompat.checkSelfPermission(this, android.Manifest.permission.CALL_PHONE)
                 == PackageManager.PERMISSION_GRANTED;
-
         if (!locationGranted || !smsGranted || !callGranted) {
             ActivityCompat.requestPermissions(this,
                     new String[]{
@@ -143,15 +124,11 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    // FIX #2: Request RECORD_AUDIO and CAMERA at runtime
     private void requestRecordingPermissions() {
-        boolean audioGranted = ActivityCompat.checkSelfPermission(this,
-                android.Manifest.permission.RECORD_AUDIO)
+        boolean audioGranted = ActivityCompat.checkSelfPermission(this, android.Manifest.permission.RECORD_AUDIO)
                 == PackageManager.PERMISSION_GRANTED;
-        boolean cameraGranted = ActivityCompat.checkSelfPermission(this,
-                android.Manifest.permission.CAMERA)
+        boolean cameraGranted = ActivityCompat.checkSelfPermission(this, android.Manifest.permission.CAMERA)
                 == PackageManager.PERMISSION_GRANTED;
-
         if (!audioGranted || !cameraGranted) {
             ActivityCompat.requestPermissions(this,
                     new String[]{
@@ -165,8 +142,7 @@ public class MainActivity extends AppCompatActivity {
 
     private void requestBackgroundLocation() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            if (ActivityCompat.checkSelfPermission(this,
-                    android.Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+            if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_BACKGROUND_LOCATION)
                     != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this,
                         new String[]{
@@ -182,40 +158,31 @@ public class MainActivity extends AppCompatActivity {
 
     private void requestNotificationAndStartService() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            if (ActivityCompat.checkSelfPermission(this,
-                    android.Manifest.permission.POST_NOTIFICATIONS)
+            if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS)
                     != PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this,
                         new String[]{android.Manifest.permission.POST_NOTIFICATIONS},
                         REQUEST_NOTIFICATION);
-            } else {
+            } else
                 startEmergencyService();
-            }
-        } else {
+        } else
             startEmergencyService();
-        }
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode,
-                                           String[] permissions, int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
         if (requestCode == REQUEST_CORE_PERMISSIONS) {
-            if (grantResults.length > 0
-                    && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 statusText.setText("Permissions granted. App is ready.");
             } else {
                 statusText.setText("Some permissions denied. Emergency features limited.");
-                Toast.makeText(this,
-                        "Please grant all permissions for full functionality.",
-                        Toast.LENGTH_LONG).show();
+                Toast.makeText(this, "Please grant all permissions for full functionality.", Toast.LENGTH_LONG)
+                        .show();
             }
             requestRecordingPermissions();
-
         } else if (requestCode == REQUEST_RECORDING_PERMISSIONS) {
             requestBackgroundLocation();
-
         } else if (requestCode == REQUEST_BACKGROUND_LOCATION) {
             if (grantResults.length > 0
                     && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -226,28 +193,22 @@ public class MainActivity extends AppCompatActivity {
                         Toast.LENGTH_SHORT).show();
             }
             requestNotificationAndStartService();
-
         } else if (requestCode == REQUEST_NOTIFICATION) {
             startEmergencyService();
         }
     }
 
-    // ─── BACKGROUND SERVICE ───────────────────────────────────────
-
+    // baclground service
     private void startEmergencyService() {
         Intent serviceIntent = new Intent(this, EmergencyService.class);
         startForegroundService(serviceIntent);
     }
 
-    // ─── COUNTDOWN ────────────────────────────────────────────────
-
     private void startCountdown() {
         isCountingDown = true;
         vibratePhone(500);
-        panicButton.setBackgroundTintList(
-                android.content.res.ColorStateList.valueOf(
+        panicButton.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
                         android.graphics.Color.parseColor("#FF5722")));
-
         countDownTimer = new CountDownTimer(3000, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
@@ -266,18 +227,15 @@ public class MainActivity extends AppCompatActivity {
                                 android.graphics.Color.parseColor("#E91E63")));
                 statusText.setText("Sending emergency alert...");
                 vibratePhone(1000);
-
-                // FIX #8: Actually start recording when panic fires
+                // start recording when panic fires
                 recordingManager.startEmergencyRecording();
                 if (recordingManager.isRecording()) {
                     stopRecordingBtn.setVisibility(android.view.View.VISIBLE);
                 }
-
                 getLocation();
             }
         }.start();
     }
-
     private void cancelCountdown() {
         if (countDownTimer != null) countDownTimer.cancel();
         isCountingDown = false;
@@ -289,8 +247,6 @@ public class MainActivity extends AppCompatActivity {
         vibratePhone(100);
     }
 
-    // ─── VIBRATION ────────────────────────────────────────────────
-
     private void vibratePhone(int milliseconds) {
         Vibrator vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
         if (vibrator != null && vibrator.hasVibrator()) {
@@ -298,8 +254,6 @@ public class MainActivity extends AppCompatActivity {
                     milliseconds, VibrationEffect.DEFAULT_AMPLITUDE));
         }
     }
-
-    // ─── LOCATION ─────────────────────────────────────────────────
 
     private void getLocation() {
         if (ActivityCompat.checkSelfPermission(this,
@@ -309,7 +263,6 @@ public class MainActivity extends AppCompatActivity {
             statusText.setText("Please grant permissions first.");
             return;
         }
-
         fusedLocationClient.getLastLocation()
                 .addOnSuccessListener(location -> {
                     double lat, lon;
@@ -325,7 +278,6 @@ public class MainActivity extends AppCompatActivity {
                     }
                     emergencyManager.sendEmergency(lat, lon);
                     emergencyManager.makeCall();
-
                     String time = new java.text.SimpleDateFormat(
                             "dd MMM yyyy, hh:mm a",
                             java.util.Locale.getDefault())
@@ -333,8 +285,6 @@ public class MainActivity extends AppCompatActivity {
                     statusText.setText("Last alert sent: " + time);
                 });
     }
-
-    // ─── SAVE HOME LOCATION ───────────────────────────────────────
 
     private void saveHomeLocation() {
         SharedPreferences prefs = getSharedPreferences("SakhiShieldPrefs", MODE_PRIVATE);
@@ -350,7 +300,6 @@ public class MainActivity extends AppCompatActivity {
                     Toast.LENGTH_SHORT).show();
             return;
         }
-
         fusedLocationClient.getLastLocation().addOnSuccessListener(location -> {
             double lat, lon;
             if (location != null) {
@@ -360,16 +309,13 @@ public class MainActivity extends AppCompatActivity {
                 lat = 30.2675;
                 lon = 77.9959;
             }
-
-            // FIX #6: Geocoder must run on a background thread
+            // Geocoder must run on a background thread
             final double finalLat = lat;
             final double finalLon = lon;
-            new Thread(() -> {
+            new Thread(() -> { //Geocoder network tasks should not block UI thread
                 try {
-                    android.location.Geocoder geocoder =
-                            new android.location.Geocoder(this, java.util.Locale.getDefault());
-                    java.util.List<android.location.Address> addresses =
-                            geocoder.getFromLocation(finalLat, finalLon, 1);
+                    android.location.Geocoder geocoder = new android.location.Geocoder(this, java.util.Locale.getDefault());
+                    java.util.List<android.location.Address> addresses = geocoder.getFromLocation(finalLat, finalLon, 1);
                     String address = "";
                     if (addresses != null && !addresses.isEmpty()) {
                         address = addresses.get(0).getAddressLine(0);
@@ -392,8 +338,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    // ─── LIFECYCLE ────────────────────────────────────────────────
-
+    // lifecycle
     @Override
     protected void onDestroy() {
         super.onDestroy();

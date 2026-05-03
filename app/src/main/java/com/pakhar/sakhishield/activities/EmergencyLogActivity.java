@@ -15,7 +15,6 @@ import com.pakhar.sakhishield.database.DatabaseHelper;
 import java.util.ArrayList;
 
 public class EmergencyLogActivity extends AppCompatActivity {
-
     ListView logListView;
     TextView logCount;
     Button clearBtn;
@@ -25,14 +24,11 @@ public class EmergencyLogActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_emergency_log);
-
         dbHelper    = new DatabaseHelper(this);
         logListView = findViewById(R.id.logListView);
         logCount    = findViewById(R.id.logCount);
         clearBtn    = findViewById(R.id.clearLogsBtn);
-
         loadLogs();
-
         clearBtn.setOnClickListener(v ->
                 new android.app.AlertDialog.Builder(this)
                         .setTitle("Clear History")

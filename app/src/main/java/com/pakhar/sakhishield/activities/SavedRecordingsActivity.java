@@ -21,11 +21,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 
 public class SavedRecordingsActivity extends AppCompatActivity {
-
     ListView recordingsList;
     TextView recordingsCount;
     Button clearAllBtn;
-
     ArrayList<File> recordingFiles = new ArrayList<>();
     ArrayList<String> recordingNames = new ArrayList<>();
     ArrayAdapter<String> adapter;
@@ -34,20 +32,14 @@ public class SavedRecordingsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_saved_recordings);
-
         recordingsList  = findViewById(R.id.recordingsList);
         recordingsCount = findViewById(R.id.recordingsCount);
         clearAllBtn     = findViewById(R.id.clearAllBtn);
-
         loadRecordings();
-
-        // ─── TAP — PLAY/VIEW RECORDING ────────────────────────────
         recordingsList.setOnItemClickListener((parent, view, position, id) -> {
             File file = recordingFiles.get(position);
             openRecording(file);
         });
-
-        // ─── LONG PRESS — DELETE ──────────────────────────────────
         recordingsList.setOnItemLongClickListener((parent, view, position, id) -> {
             File file = recordingFiles.get(position);
             new AlertDialog.Builder(this)
@@ -65,8 +57,6 @@ public class SavedRecordingsActivity extends AppCompatActivity {
                     .show();
             return true;
         });
-
-        // ─── CLEAR ALL ────────────────────────────────────────────
         clearAllBtn.setOnClickListener(v -> {
             if (recordingFiles.isEmpty()) {
                 Toast.makeText(this,
@@ -92,33 +82,21 @@ public class SavedRecordingsActivity extends AppCompatActivity {
         });
     }
 
-    // ─── OPEN RECORDING ───────────────────────────────────────────
-
     private void openRecording(File file) {
         try {
-            // FileProvider — required on Android 7+ to share files securely
-            // Direct file:// URIs are blocked by Android since API 24
             Uri fileUri = FileProvider.getUriForFile(
                     this,
                     getPackageName() + ".provider", // matches authority in manifest
                     file);
 
             Intent intent = new Intent(Intent.ACTION_VIEW);
-
-            // Set correct MIME type based on file extension
             if (file.getName().endsWith(".mp4") || file.getName().endsWith(".avi")) {
                 intent.setDataAndType(fileUri, "video/*");
             } else {
-                // .3gp, .mp3, .aac etc
                 intent.setDataAndType(fileUri, "audio/*");
             }
-
-            // Grant temporary read permission to the media player app
             intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-
-            // Open with any compatible media player on device
             startActivity(Intent.createChooser(intent, "Open with..."));
-
         } catch (Exception e) {
             Toast.makeText(this,
                     "No media player found to open this file.",
@@ -127,21 +105,13 @@ public class SavedRecordingsActivity extends AppCompatActivity {
         }
     }
 
-    // ─── LOAD RECORDINGS ──────────────────────────────────────────
-
     private void loadRecordings() {
         recordingFiles.clear();
         recordingNames.clear();
-
-        // Scan both audio and video directories
         scanFolder(getExternalFilesDir(Environment.DIRECTORY_MUSIC));
         scanFolder(getExternalFilesDir(Environment.DIRECTORY_MOVIES));
-
-        // Sort by newest first
         Collections.sort(recordingFiles,
                 (a, b) -> Long.compare(b.lastModified(), a.lastModified()));
-
-        // Build display names
         for (File f : recordingFiles) {
             boolean isVideo = f.getName().endsWith(".mp4") || f.getName().endsWith(".avi");
             String type = isVideo ? "🎥 Video" : "🎵 Audio";
@@ -153,8 +123,6 @@ public class SavedRecordingsActivity extends AppCompatActivity {
             recordingNames.add(type + " — " + date +
                     "\n" + sizeKb + " KB  •  Tap to play");
         }
-
-        // Update count text
         int count = recordingFiles.size();
         if (count == 0) {
             recordingsCount.setText("No recordings found.");
@@ -163,7 +131,6 @@ public class SavedRecordingsActivity extends AppCompatActivity {
                     (count > 1 ? "s" : "") +
                     " saved. Tap to play, long press to delete.");
         }
-
         adapter = new ArrayAdapter<>(this,
                 android.R.layout.simple_list_item_1, recordingNames);
         recordingsList.setAdapter(adapter);
@@ -174,7 +141,6 @@ public class SavedRecordingsActivity extends AppCompatActivity {
         File[] files = folder.listFiles();
         if (files == null) return;
         for (File f : files) {
-            // Only include SakhiShield recordings — bracket fixes operator precedence
             if (f.isFile() && (f.getName().startsWith("SakhiShield") ||
                     f.getName().startsWith("Emergency"))) {
                 recordingFiles.add(f);
